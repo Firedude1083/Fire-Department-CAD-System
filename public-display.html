@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire CAD PRO - Station Display</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #0a0e27 0%, #1a1a2e 100%);
+            border-bottom: 3px solid #d4a574;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff8800 0%, #ff2222 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 0 15px rgba(255, 102, 0, 0.5);
+        }
+
+        .station-info h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        .station-info p {
+            font-size: 14px;
+            color: #ffaa00;
+            margin: 4px 0 0 0;
+            font-weight: 500;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            font-size: 18px;
+        }
+
+        .time-display {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .time {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffaa00;
+        }
+
+        .date {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .refresh-btn {
+            background: #d4a574;
+            border: none;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .refresh-btn:hover {
+            background: #ffaa00;
+            transform: rotate(180deg);
+        }
+
+        .content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 30px;
+            gap: 15px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .table-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffaa00;
+            letter-spacing: 1px;
+        }
+
+        .record-count {
+            font-size: 16px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .record-count strong {
+            color: #ffaa00;
+            font-size: 20px;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 10px;
+        }
+
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #d4a574;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #ffaa00;
+        }
+
+        .table-header-row {
+            display: grid;
+            grid-template-columns: 200px 200px 1fr;
+            gap: 20px;
+            padding: 15px 20px;
+            background: #2a2a3e;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 16px;
+            color: #ffaa00;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #d4a574;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 200px 200px 1fr;
+            gap: 20px;
+            padding: 18px 20px;
+            background: #2a2a3e;
+            border-radius: 6px;
+            border-left: 6px solid #d4a574;
+            font-size: 18px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .table-row:hover {
+            background: #333349;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+        }
+
+        .table-row.medical {
+            border-left-color: #ff6b6b;
+            background: linear-gradient(90deg, #3a1a1a 0%, #2a2a3e 100%);
+        }
+
+        .table-row.medical:hover {
+            background: linear-gradient(90deg, #4a2a2a 0%, #333349 100%);
+        }
+
+        .table-row.fire {
+            border-left-color: #ff2222;
+            background: linear-gradient(90deg, #3a1a1a 0%, #2a2a3e 100%);
+        }
+
+        .table-row.fire:hover {
+            background: linear-gradient(90deg, #4a2a2a 0%, #333349 100%);
+        }
+
+        .table-row.accident {
+            border-left-color: #ffaa00;
+            background: linear-gradient(90deg, #3a2a1a 0%, #2a2a3e 100%);
+        }
+
+        .table-row.accident:hover {
+            background: linear-gradient(90deg, #4a3a2a 0%, #333349 100%);
+        }
+
+        .cell-time {
+            color: #ffaa00;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .cell-type {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .type-badge {
+            background: #d4a574;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .table-row.medical .type-badge {
+            background: #ff6b6b;
+        }
+
+        .table-row.fire .type-badge {
+            background: #ff2222;
+        }
+
+        .table-row.accident .type-badge {
+            background: #ffaa00;
+        }
+
+        .cell-location {
+            color: #ccc;
+            word-break: break-word;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00aa00;
+            animation: pulse 2s infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(0, 255, 68, 0.7);
+            }
+            50% {
+                opacity: 0.8;
+                box-shadow: 0 0 0 8px rgba(0, 255, 68, 0);
+            }
+        }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            gap: 15px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            opacity: 0.3;
+        }
+
+        .empty-text {
+            font-size: 20px;
+        }
+
+        .footer {
+            background: #0a0e27;
+            border-top: 2px solid #d4a574;
+            padding: 12px 30px;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-left {
+            display: flex;
+            gap: 20px;
+        }
+
+        .status-online {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #00aa00;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #00aa00;
+            border-radius: 50%;
+        }
+
+        @media (max-width: 1920px) {
+            .table-header-row,
+            .table-row {
+                grid-template-columns: 180px 180px 1fr;
+                font-size: 16px;
+                padding: 14px 16px;
+            }
+
+            .cell-time {
+                font-size: 14px;
+            }
+        }
+
+        /* Auto-refresh animation */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .refresh-btn.spinning {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="logo"><img src="/Fire_Rescue_Badge.svg" class="fire-logo" alt="Fire Rescue" style="width: 24px; height: 24px; display: inline-block; margin: 0 4px; vertical-align: middle;"></div>
+            <div class="station-info">
+                <h1>Fire CAD PRO</h1>
+                <p>Station 1 - Current Incidents Display</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="time-display">
+                <div class="time" id="time">00:00</div>
+                <div class="date" id="date">Loading...</div>
+            </div>
+            <button class="refresh-btn" onclick="refreshData()" title="Refresh data">
+                <i class="fas fa-sync"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="table-header">
+            <div class="table-title">
+                <i class="fas fa-bell"></i> CURRENT INCIDENTS
+            </div>
+            <div class="record-count">
+                Viewing <strong id="record-count">0</strong> of <strong id="total-count">0</strong> records
+            </div>
+        </div>
+
+        <div class="table-header-row">
+            <div>Create Date/Time</div>
+            <div>Fire Call Type</div>
+            <div>Location</div>
+        </div>
+
+        <div class="table-container" id="table-container">
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+                <div class="empty-text">No active incidents</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-left">
+            <div class="status-online">
+                <div class="status-dot"></div>
+                System Online
+            </div>
+            <div>Last Updated: <span id="last-update">Just now</span></div>
+        </div>
+        <div>Fire CAD PRO v2.1.0 © 2026</div>
+    </div>
+
+    <script>
+        // Shared data from main app
+        const incidentData = [
+            {
+                id: 1,
+                type: 'Medical Emergency',
+                category: 'medical',
+                address: '123 Main Street, Apt 405',
+                time: new Date(Date.now() - 5 * 60000),
+                status: 'en-route'
+            },
+            {
+                id: 2,
+                type: 'Structure Fire',
+                category: 'fire',
+                address: '456 Oak Street',
+                time: new Date(Date.now() - 10 * 60000),
+                status: 'responding'
+            },
+            {
+                id: 3,
+                type: 'Motor Vehicle Accident',
+                category: 'accident',
+                address: 'I-90 Exit 42',
+                time: new Date(Date.now() - 15 * 60000),
+                status: 'on-scene'
+            }
+        ];
+
+        function formatTime(date) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+        function formatDate(date) {
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${month}/${day}/${year}`;
+        }
+
+        function formatFullDateTime(date) {
+            return `${formatDate(date)} ${formatTime(date)}`;
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('time').textContent = formatTime(now);
+            document.getElementById('date').textContent = formatDate(now);
+        }
+
+        function renderTable() {
+            const container = document.getElementById('table-container');
+            
+            if (incidentData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+                        <div class="empty-text">No active incidents</div>
+                    </div>
+                `;
+                document.getElementById('record-count').textContent = '0';
+                document.getElementById('total-count').textContent = '0';
+                return;
+            }
+
+            container.innerHTML = incidentData.map(incident => `
+                <div class="table-row ${incident.category}">
+                    <div class="cell-time">
+                        <span class="status-indicator"></span>
+                        ${formatFullDateTime(incident.time)}
+                    </div>
+                    <div class="cell-type">
+                        <span class="type-badge">${incident.type}</span>
+                    </div>
+                    <div class="cell-location">
+                        📍 ${incident.address}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('record-count').textContent = incidentData.length;
+            document.getElementById('total-count').textContent = incidentData.length;
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+        }
+
+        function refreshData() {
+            const btn = event.currentTarget;
+            btn.classList.add('spinning');
+            
+            setTimeout(() => {
+                renderTable();
+                btn.classList.remove('spinning');
+            }, 600);
+        }
+
+        // Update clock every second
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Initial render
+        renderTable();
+
+        // Auto-refresh every 10 seconds
+        setInterval(renderTable, 10000);
+
+        // Prevent screen lock on display
+        function keepScreenAwake() {
+            document.addEventListener('mousemove', function() {}, false);
+            document.addEventListener('keypress', function() {}, false);
+        }
+        keepScreenAwake();
+    </script>
+</body>
+</html>
